@@ -1,0 +1,17 @@
+C:\Python27\Lib\site-packages\PyQt4\pyuic4.bat -x X:\tools\confirmDialogue\dialogueUIA.ui -o X:\tools\confirmDialogue\dialogueUIA.py
+
+pip install --trusted-host pypi.python.org
+
+
+
+PYTHONPATH
+\\san\06_LIBRARY\12_SCRIPTS_AND_WORKFILES\python\pipeline\core\client
+
+MAYA_SCRIPT_PATH
+\\san\06_LIBRARY\12_SCRIPTS_AND_WORKFILES\baseScripts
+
+MAYA_MODULE_PATH
+\\san\06_LIBRARY\12_SCRIPTS_AND_WORKFILES\python\pipeline\mayaStartUp\modules\PFX
+
+NUKE_PATH
+\\san\06_LIBRARY\12_SCRIPTS_AND_WORKFILES\python
