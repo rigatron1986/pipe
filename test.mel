@@ -1,0 +1,1438 @@
+global proc int isVersionPre2017() {
+    int $mayaVer = `about -api`;
+    if($mayaVer < 201700){
+        return true;
+    }
+    return false;
+}
+
+global proc int isJobPureIvy() {
+    python("import ivytransition");
+    return python("ivytransition.isPureIvyJob()");
+}
+
+global proc shelf_Matchmove () {
+    global string $gBuffStr;
+    global string $gBuffStr0;
+    global string $gBuffStr1;
+
+    int $is_version_pre_2017 = isVersionPre2017();
+    int $is_job_pure_ivy = isJobPureIvy();
+
+/*****************************************************************************/
+/* IMPORT/SETUP */
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 71
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Import/Setup"
+        -enableBackground 0
+        -align "center"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.25
+        -image "matchmove/spacer_import.png"
+        -image1 "matchmove/spacer_import.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+    ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Matchmove Setup"
+        -enableBackground 0
+        -align "center"
+        -label "Matchmove Setup"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_import_setup.png"
+        -image1 "matchmove/icon_import_setup.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Set Shot"
+                    -i "setShot.png"
+                    -sourceType "python"
+                    -c "from mayaImport.ui.shot import SetShotUI; x = SetShotUI(); y = x.launch()";
+
+        menuItem    -l "Set Frame Range to Scan of Selected Camera"
+                    -i "setShot.png"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmFrameRangeToScan; mmFrameRangeToScan.main()";
+
+        menuItem    -l "Update SPT"
+                    -i "shotbuild.png"
+                    -sourceType "python"
+                    -c "import dnmayalib; show = dnmayalib.env.getShow(); shot = dnmayalib.env.getShot()[0]; from shotbuild import core; core.ShotBuild.outlineShotBuild( show, shot )" ;
+
+        menuItem    -l "Shotbuild"
+                    -i "shotbuild.png"
+                    -sourceType "python"
+                    -c "import dnmayalib; show = dnmayalib.env.getShow(); shot = dnmayalib.env.getShot()[0]; from shotbuild import core; core.ShotBuild.outlineShotBuild( show, shot )"
+                    -subMenu true;
+
+                        menuItem    -l "anim"
+                                    -sourceType "python"
+                                    -c "import dnmayalib; show = dnmayalib.env.getShow(); shot = dnmayalib.env.getShot()[0]; from shotbuild import core; core.ShotBuild.getTemplatesAndShowUi( show, shot, 'anim' )";
+
+                        menuItem    -l "bodytrack"
+                                    -sourceType "python"
+                                    -c "import dnmayalib; show = dnmayalib.env.getShow(); shot = dnmayalib.env.getShot()[0]; from shotbuild import core; core.ShotBuild.getTemplatesAndShowUi( show, shot, 'bodytrack' )";
+
+                        menuItem    -l "breakdown"
+                                    -sourceType "python"
+                                    -c "import dnmayalib; show = dnmayalib.env.getShow(); shot = dnmayalib.env.getShot()[0]; from shotbuild import core; core.ShotBuild.getTemplatesAndShowUi( show, shot, 'breakdown' )";
+
+                        menuItem    -l "cameratrack"
+                                    -sourceType "python"
+                                    -c "import dnmayalib; show = dnmayalib.env.getShow(); shot = dnmayalib.env.getShot()[0]; from shotbuild import core; core.ShotBuild.getTemplatesAndShowUi( show, shot, 'cameratrack' )";
+
+                        menuItem    -l "fx"
+                                    -sourceType "python"
+                                    -c "import dnmayalib; show = dnmayalib.env.getShow(); shot = dnmayalib.env.getShot()[0]; from shotbuild import core; core.ShotBuild.getTemplatesAndShowUi( show, shot, 'fx' )";
+
+                        menuItem    -l "layout"
+                                    -sourceType "python"
+                                    -c "import dnmayalib; show = dnmayalib.env.getShow(); shot = dnmayalib.env.getShot()[0]; from shotbuild import core; core.ShotBuild.getTemplatesAndShowUi( show, shot, 'layout' )";
+
+                        menuItem    -l "lighting"
+                                    -sourceType "python"
+                                    -c "import dnmayalib; show = dnmayalib.env.getShow(); shot = dnmayalib.env.getShot()[0]; from shotbuild import core; core.ShotBuild.getTemplatesAndShowUi( show, shot, 'lighting' )";
+
+                        setParent -menu ..;
+
+        menuItem    -l "Open Dispatcher Scene"
+                    -i "matchmove/ivy.png"
+                    -sourceType "python"
+                    -c "from mayaImport.ui.base import ImporterUI; x = ImporterUI( mode='open', twigtype='scene/maya' ); y = x.launch()" ;
+
+        menuItem    -l "Import OMM"
+                    -i "matchmove/ivy.png"
+                    -sourceType "python"
+                    -c "from mayaImport.ui.base import ImporterUI; x = ImporterUI( mode='import', twigtype='outsource/matchmove'); y = x.launch()" ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Camera Setup"
+        -enableBackground 0
+        -align "center"
+        -label "Camera Setup"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_import_camera.png"
+        -image1 "matchmove/icon_import_camera.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Create Camera"
+                    -i "matchmove/camera.png"
+                    -sourceType "python"
+                    -c "import dnCameraNew; ui = dnCameraNew.dnCreateCameraNewUI(); ui.show()";
+
+        menuItem    -l "Add dnCameraFrustum"
+                    -i "out_dnCameraFrustum.xpm"
+                    -sourceType "python"
+                    -c "import dnCameraFrustumTools; dnCameraFrustumTools.addDnCameraFrustumToSelection()";
+
+        menuItem    -l "Import Lens Profile"
+                    -i "matchmove/ivy.png"
+                    -sourceType "python"
+                    -c "from mayaImport.ui.base import ImporterUI; importer = ImporterUI(mode='import', twigtype='camera/lensprofile', window_title='Import Lens Profile'); importer.launch()";
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Stage Tool"
+        -enableBackground 0
+        -align "center"
+        -label "Stage Tool"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_import_stage_tool.png"
+        -image1 "matchmove/icon_import_stage_tool.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+        -command "import ivylayout; ivylayout.main()" ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Asset Packages"
+        -enableBackground 0
+        -align "center"
+        -label "Asset Packages"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_import_asset_packages.png"
+        -image1 "matchmove/icon_import_asset_packages.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Load Selected Asset"
+                    -i "apkgViewGeo.png"
+                    -sourceType "python"
+                    -c "from asset_packages.maya import api ; api.loadGeometry( recursive = True ) ; None";
+
+        menuItem    -l "Load Next Level of Asset Hierarchy"
+                    -i "apkgLoadNext.png"
+                    -sourceType "python"
+                    -c "from asset_packages.maya.shelf import tools ; tools.loadNextLevel( ) ; None";
+
+        menuItem    -l "Unload Selected Asset"
+                    -i "apkgViewBBOX.png"
+                    -sourceType "python"
+                    -c "from asset_packages.maya import api ; api.unloadGeometry( ) ; None";
+
+        menuItem    -l "Expand Hierarchy"
+                    -i "apkgExpandToLeaf.png"
+                    -sourceType "python"
+                    -c "from asset_packages.maya import api ; api.loadGeometry( recursive = True, stop_at_leaf = True ) ; None";
+
+        menuItem    -l "Preview Selected Asset"
+                    -i "apkgHWAPreview.png"
+                    -sourceType "python"
+                    -c "from asset_packages.maya import api ; api.previewGeometry( use_alembic = True ) ; None";
+
+        menuItem    -l "Delete Selected Asset"
+                    -i "apkgDelete.png"
+                    -sourceType "python"
+                    -c "from asset_packages.maya.shelf import tools ; tools.prune_nodes() ; None";
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Switch the behaviour of one or more selected apkgReference nodes..."
+        -enableBackground 0
+        -align "center"
+        -label "Switch Behaviours"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -imageOverlayLabel ""
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0
+        -image "matchmove/apkgBehaviourSwitchBW.png"
+        -image1 "matchmove/apkgBehaviourSwitchBW.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -command ""
+        -sourceType "mel";
+    //  The lod menu
+    $behaviourMenu = `popupMenu -b 1`;
+    //  The popup menu
+    popupMenu -edit -postMenuCommandOnce 1 -postMenuCommand ("populateBehaviourMenu( \"" + $behaviourMenu + "\" );") $behaviourMenu;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Matchmove Hierarchy"
+        -enableBackground 0
+        -align "center"
+        -label "Matchmove Hierarchy"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_import_hierarchy.png"
+        -image1 "matchmove/icon_import_hierarchy.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -command "from mayaMatchmove import mmSetupCameraGroupsUI;widget=mmSetupCameraGroupsUI.ScanIdMainWindow();widget.show()"
+        -flat 1;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Stereo Utils"
+        -enableBackground 0
+        -align "center"
+        -label "Stereo Utils"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/stereo_utils.png"
+        -image1 "matchmove/stereo_utils.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Convert to ABA Stereo Camera Rig"
+                    -i "matchmove/icon_ABA_stereo_camera_rig.png"
+                    -sourceType "python"
+                    -c "import convertCamera; convertCamera.selectedStereoToRig_ABAworkaround()";
+
+/*****************************************************************************/
+/* CAMERA TOOLS */
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 71
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Camera Tools"
+        -enableBackground 0
+        -align "center"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.25
+        -image "matchmove/spacer_camera.png"
+        -image1 "matchmove/spacer_camera.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+    ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Focus Camera on Selection"
+        -enableBackground 0
+        -align "center"
+        -label "Focus Camera on Selection"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_camera_focus_locator.png"
+        -image1 "matchmove/icon_camera_focus_locator.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Add Point Blast"
+                    -i "matchmove/plus.png"
+                    -sourceType "python"
+                    -c "import pointblast; pointblast.focus_camera_on_selection()";
+
+        menuItem    -l "Remove Point Blast"
+                    -i "matchmove/minus.png"
+                    -sourceType "python"
+                    -c "import pointblast; pointblast.unfocus_selected_camera()";
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Euler Filter"
+        -enableBackground 0
+        -align "center"
+        -label "Euler Filter"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -imageOverlayLabel "Euler"
+        -overlayLabelColor 1.0 1.0 1.0
+        -overlayLabelBackColor 0 0 0 0.0
+        -image "matchmove/icon_background.png"
+        -image1 "matchmove/icon_background.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+        -command "from mayaMatchmove import mmMiscUtils; mmMiscUtils.eulerSelected()" ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Median Filter"
+        -enableBackground 0
+        -align "center"
+        -label "Median Filter"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -imageOverlayLabel "mFil"
+        -overlayLabelColor 1.0 1.0 1.0
+        -overlayLabelBackColor 0 0 0 0.0
+        -image "matchmove/icon_background.png"
+        -image1 "matchmove/icon_background.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+        -command "import maya.mel as mm; mm.eval('source mFilter; mFilter(3)')" ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Quick Bake"
+        -enableBackground 0
+        -align "center"
+        -label "Quick Bake"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 1.0 1.0 1.0
+        -overlayLabelBackColor 0 0 0 0.0
+        -image "matchmove/icon_camera_quick_bake.png"
+        -image1 "matchmove/icon_camera_quick_bake.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+        -command "from maya import mel as mm, cmds as mc; from mayaMatchmove import mmQuickBake; mmQuickBake.quickBake(mc.ls(sl = True), mm.eval('selectedChannelBoxAttributes'))" ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Project Locators"
+        -enableBackground 0
+        -align "center"
+        -label "Project Locators"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 1.0 1.0 1.0
+        -overlayLabelBackColor 0 0 0 0.0
+        -image "matchmove/icon_camera_project_locators.png"
+        -image1 "matchmove/icon_camera_project_locators.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+        -command "from mayaMatchmove import mmProjectLocators; mmProjectLocators.project()" ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Flop"
+        -enableBackground 0
+        -align "center"
+        -label "Flop"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 1.0 1.0 1.0
+        -overlayLabelBackColor 0 0 0 0.0
+        -image "matchmove/icon_camera_flop.png"
+        -image1 "matchmove/icon_camera_flop.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+        -command "from mayaMatchmove import mmFlopTool; flopWin = mmFlopTool.FlopTool(); flopWin.show()" ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Timewarp Manager"
+        -enableBackground 0
+        -align "center"
+        -label "Timewarp Manager"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_camera_retime.png"
+        -image1 "matchmove/icon_camera_retime.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+        -command "import dnPublishTimewarp; dnPublishTimewarp.showUI()" ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Camera Utilities"
+        -enableBackground 0
+        -align "center"
+        -label "Camera Utilities"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -imageOverlayLabel "Clean"
+        -overlayLabelColor 1.0 1.0 1.0
+        -overlayLabelBackColor 0 0 0 0.0
+        -image "matchmove/icon_camera_clean.png"
+        -image1 "matchmove/icon_camera_clean.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Clean Camera (scale to 1)"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmCamUtils; camUtilsWin = mmCamUtils.CamUtils(); camUtilsWin.cleanCamera( scale = True )";
+
+        menuItem    -l "Clean Camera (no rescale)"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmCamUtils; camUtilsWin = mmCamUtils.CamUtils(); camUtilsWin.cleanCamera( scale = False )";
+
+        menuItem    -l "Copy Focal Length"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmCamUtils; camUtilsWin = mmCamUtils.CamUtils(); camUtilsWin.copyFocalLength()";
+
+        menuItem    -l "Camera Control"
+                    -i "locator.png"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmCamUtils; camUtilsWin = mmCamUtils.CamUtils(); camUtilsWin.cameraControl()";
+
+        menuItem    -l "Set Cache Size"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmSetCacheSize; mmSetCacheSize.setCacheSize()";
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Matchmove Scripts"
+        -enableBackground 0
+        -align "center"
+        -label "Matchmove Scripts"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_camera_scripts.png"
+        -image1 "matchmove/icon_camera_scripts.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Align Scene Nodes"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmSceneNodeAlign; mmSceneNodeAlign.run()";
+
+        menuItem    -l "Make Frustum Translucent"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmImagePlaneTools; mmImagePlaneTools.camFrustumTrans()";
+
+        menuItem    -l "Make Frustum Solid"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmImagePlaneTools; mmImagePlaneTools.camFrustumSolid()";
+
+        menuItem    -l "Toggle Frustum"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmImagePlaneTools; mmImagePlaneTools.frustumSwitch()";
+
+        menuItem    -l "Toggle Masks"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmMaskTools; mmMaskTools.toggle_camera_masks()";
+
+        menuItem    -l "Simplify Keys"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmSimplifyKeys; win = mmSimplifyKeys.MMSimplifyKeysDialog(); win.show()";
+
+        menuItem    -l "Smart Bake"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmQuickBake; sbw = mmQuickBake.SmartBakeWidget(); sbw.show()";
+
+        menuItem    -l "Inverse Anim Tool"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmAnimInverse; win = mmAnimInverse.MMAnimInverseDialog(); win.show()";
+
+        menuItem    -l "Unlock Node"
+                    -sourceType "python"
+                    -c "import maya.cmds as mc; mc.lockNode( l=False); print( 'Node unlocked' )";
+
+        menuItem    -l "dnTriangulate"
+                    -sourceType "python"
+                    -c "import maya.cmds as mc; import dnmayalib as dm; mc.dnTriangulatePCD() if dm.util.loadPlugin( 'dnTriangulatePCD' ) else False";
+
+        menuItem    -l "Rename Namespace"
+                    -sourceType "mel"
+                    -c "NamespaceEditor";
+
+        menuItem    -l "dnMeshConstraint"
+                    -sourceType "python"
+                    -c "import maya.cmds as mc; mc.dnMeshConstraint();";
+
+        menuItem    -l "Gemelo"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import gemelo; gemelo.align(); gemelo.align();";
+
+        menuItem    -l "Nudge Tool"
+                    -i "matchmove/nudge_tool.png"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmNudgeTool; nudge = mmNudgeTool.NudgeTool(); nudge.show()";
+
+        menuItem    -l "Reparent"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmReparentTool; mmReparentTool.main()";
+
+        menuItem    -l "HideOut"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmHideOut; mmHideOut.toggle_hideout()";
+
+        menuItem    -l "Object Offset Tool"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmObjectOffset; obo = mmObjectOffset.ObjectOffsetTool(); obo.show()";
+
+        menuItem    -l "IP Constraint Tool"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmImagePlaneConstraint; ipWin = mmImagePlaneConstraint.ImagePlaneConstraintWindow(); ipWin.show()";
+
+        menuItem    -l "Silhouette Viewer"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmSilhouetteviewer; silwin = mmSilhouetteviewer.SilhouetteWindow(); silwin.show()";
+
+    shelfButton
+            -enableCommandRepeat 1
+            -enable 1
+            -width 35
+            -height 35
+            -manage 1
+            -visible 1
+            -preventOverride 0
+            -annotation "Wireframe on Viewport 2.0"
+            -enableBackground 0
+            -align "center"
+            -label "Wireframe on Viewport 2.0"
+            -labelOffset 0
+            -font "plainLabelFont"
+            -overlayLabelColor 0.8 0.8 0.8
+            -overlayLabelBackColor 0 0 0 0.5
+            -image "matchmove/icon_wireframe_on_viewport.png"
+            -image1 "matchmove/icon_wireframe_on_viewport.png"
+            -style "iconOnly"
+            -marginWidth 1
+            -marginHeight 1
+            -sourceType "python"
+            -commandRepeatable 1
+            -flat 1;
+
+            popupMenu -b 1 ;
+
+            menuItem    -l "Add Wireframe hotkeys"
+                        -i "matchmove/plus.png"
+                        -sourceType "python"
+                        -c "from mayaMatchmove import mmWireframeOnVp2; mmWireframeOnVp2.set_wireframe_hotkeys()";
+
+            menuItem    -l "Remove Wireframe hotkeys"
+                        -i "matchmove/minus.png"
+                        -sourceType "python"
+                        -c "from mayaMatchmove import mmWireframeOnVp2; mmWireframeOnVp2.remove_wireframe_hotkeys()";
+
+/*****************************************************************************/
+/* BODY/OBJ TOOLS */
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 71
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Body/Obj Tools"
+        -enableBackground 0
+        -align "center"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.25
+        -image "matchmove/spacer_body.png"
+        -image1 "matchmove/spacer_body.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+    ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Anim Tools"
+        -enableBackground 0
+        -align "center"
+        -label "Anim Tools"
+        -labelOffset 0
+        -font "smallPlainLabelFont"
+        -imageOverlayLabel "Anim\nTools"
+        -overlayLabelColor 1.0 1.0 1.0
+        -overlayLabelBackColor 0 0 0 0.0
+        -image "matchmove/icon_background_menu.png"
+        -image1 "matchmove/icon_background_menu.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Anim Tools"
+                    -sourceType "python"
+                    -c "from animation.dnAnim.main import UI; maintool = UI(); maintool.show()";
+
+        menuItem    -l "Pre-Roll Tool"
+                    -sourceType "python"
+                    -c "import preRoll; preRoll.main()";
+
+        menuItem    -l "Select All Animatable Controls"
+                    -sourceType "python"
+                    -c "from animation import util; util.selectAllCtrlsSelected()";
+
+        menuItem    -l "Transfer Anim Tool"
+                    -sourceType "python"
+                    -c "import transformCurves; transformCurves.ui()";
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Dynamic Attribute Editor"
+        -enableBackground 0
+        -align "center"
+        -label "Dynamic Attribute Editor"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_body_muppet.png"
+        -image1 "matchmove/icon_body_muppet.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+        -command "import maya.mel as mm; mm.eval(\"dynamicAE(); dynamicAE_ui();\")";
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Orient to Camera"
+        -enableBackground 0
+        -align "center"
+        -label "Orient to Camera"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_body_orient_to_camera.png"
+        -image1 "matchmove/icon_body_orient_to_camera.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Orient to Camera"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmOrientToCamera; win = mmOrientToCamera.MMOrientToCameraDialog(); win.show()" ;
+
+        menuItem    -l "Aim to Camera"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmAimToCamera; mmAimToCamera.alignToCam()" ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Bake Locators to Controls"
+        -enableBackground 0
+        -align "center"
+        -label "Bake Locators to Controls"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 1.0 1.0 1.0
+        -overlayLabelBackColor 0 0 0 0.0
+        -image "matchmove/icon_body_bake_locators.png"
+        -image1 "matchmove/icon_body_bake_locators.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+        -command "from mayaMatchmove import mmBakeLocsToControls; a2lWin = mmBakeLocsToControls.AnimToLocUI(); a2lWin.show()" ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "dnSoftDeform"
+        -enableBackground 0
+        -align "center"
+        -label "dnSoftDeform"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_body_deformer.png"
+        -image1 "matchmove/icon_body_deformer.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+        -command "import dnSoftDeform; dnSoftDeform.main()";
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Control Freeze"
+        -enableBackground 0
+        -align "center"
+        -label "Control Freeze"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 1.0 1.0 1.0
+        -overlayLabelBackColor 0 0 0 0.0
+        -image "matchmove/icon_body_freeze_control.png"
+        -image1 "matchmove/icon_body_freeze_control.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Freeze"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmBakeLocsToControls; mmBakeLocsToControls.control_freeze()";
+
+        menuItem    -l "Defrost"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmBakeLocsToControls; mmBakeLocsToControls.control_defrost()";
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Transfer Utilities"
+        -enableBackground 0
+        -align "center"
+        -label "Transfer Utilities"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_body_transfer_utilities.png"
+        -image1 "matchmove/icon_body_transfer_utilities.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Object Transfer Utilities"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmObjectUtils; o = mmObjectUtils.ObjectUtils(); o.show()";
+
+        menuItem    -l "Convert to Camera Rig"
+                    -sourceType "python"
+                    -c "import convertCamera; convertCamera.selectedMonoToRig()";
+
+        menuItem    -l "Flatten Rig to Camera"
+                    -sourceType "python"
+                    -c "import convertCamera; convertCamera.selectedRigToMono()";
+
+
+    shelfButton
+        -enableCommandRepeat 0
+        -enable 1
+        -noDefaultPopup
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "holdout"
+        -annotation "Holdout Shader"
+        -image ("matchmove/animShelf_holdoutShaderBW.png")
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -actionIsSubstitute 0
+        -stp "python"
+        -command "import applyHoldoutShader;applyHoldoutShader.applyDnCameraFrustumHoldoutShaderToSelection()";
+
+/*****************************************************************************/
+/* EXPORT/PUBLISH */
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 71
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Export/Publish"
+        -enableBackground 0
+        -align "center"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.25
+        -image "matchmove/spacer_export.png"
+        -image1 "matchmove/spacer_export.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+    ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Export"
+        -enableBackground 0
+        -align "center"
+        -label "Export"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_export.png"
+        -image1 "matchmove/icon_export.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Export Survey Points to 3DE"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmSurveyPointsTo3de; mmSurveyPointsTo3de.SurveyPointsTo3de()";
+
+        menuItem    -l "Export Kuper"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmKuperExporter; mmKuperExporter.main()";
+
+        menuItem    -l "Export Zoom/Focus Curves"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmExportZoom; win = mmExportZoom.ExportZoom(); win.show()";
+
+        menuItem    -l "Export PhotoFit Points"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmExportPoints; win = mmExportPoints.ExportPoints(); win.show()";
+
+        menuItem    -l "Export Lens Solve"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmPublishLens; dialog = mmPublishLens.ExportLensSolveGui(); dialog.show()";
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Cones"
+        -enableBackground 0
+        -align "center"
+        -label "Cones"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 1.0 1.0 1.0
+        -overlayLabelBackColor 0 0 0 0.0
+        -image "matchmove/icon_export_cones.png"
+        -image1 "matchmove/icon_export_cones.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Cones"
+                    -sourceType "python"
+                    -c "import maya.cmds as mc; from mayaMatchmove import mmCones; mmCones.matchmove_cones_apkg(mc.ls(sl=1))" ;
+
+        menuItem    -l "Cone Controller"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmConeController; ui = mmConeController.ConeControllerMainWindow();ui.show()";
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable $is_job_pure_ivy
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Pointblast"
+        -enableBackground 0
+        -align "center"
+        -label "Pointblast"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 1.0 1.0 1.0
+        -overlayLabelBackColor 0 0 0 0.0
+        -image "matchmove/icon_export_pointblast.png"
+        -image1 "matchmove/icon_export_pointblast.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+        -command "import pointblast; pointblast.show_dialog()";
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable $is_version_pre_2017
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Playblast Tools"
+        -enableBackground 0
+        -align "center"
+        -label "Playblast Tools"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_export_playblast.png"
+        -image1 "matchmove/icon_export_playblast.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Matchmove Playblast"
+                    -sourceType "python"
+                    -c "from mayaMatchmove import mmPlayblast; pb = mmPlayblast.MMPlayblast(); pb.show()";
+
+        menuItem    -l "Cycle Playblast"
+                    -sourceType "python"
+                    -c "import cycplayblast_win; cycplayblast_win.show()";
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Wireframe Render Editor"
+        -enableBackground 0
+        -align "center"
+        -label "Wireframe Render Editor"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 1.0 1.0 1.0
+        -overlayLabelBackColor 0 0 0 0.0
+        -image "matchmove/icon_export_wireframe.png"
+        -image1 "matchmove/icon_export_wireframe.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+        -command "from qc_render_editor import wireframe_editor_window; wireframe_editor_window.show()" ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Matchmove Dispatchers"
+        -enableBackground 0
+        -align "center"
+        -label "Matchmove Dispatchers"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_export_dispatchers.png"
+        -image1 "matchmove/icon_export_dispatchers.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Cameratrack Dispatcher"
+                    -i "dispatchers/dispatcher_icon.png"
+                    -sourceType "python"
+                    -c "from tasklauncher_presets.presets import PresetManager; preset_manager = PresetManager(); preset_manager.load_dispatcher('shot', 'cameratrack')";
+
+        menuItem    -l "Bodytrack Dispatcher"
+                    -i "dispatchers/dispatcher_icon.png"
+                    -sourceType "python"
+                    -c "from tasklauncher_presets.presets import PresetManager; preset_manager = PresetManager(); preset_manager.load_dispatcher('shot', 'bodytrack')";
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Outsource Tools"
+        -enableBackground 0
+        -align "center"
+        -label "Outsource Tools"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_export_outsource_tools.png"
+        -image1 "matchmove/icon_export_outsource_tools.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Outsource Ingest Tool"
+                    -sourceType "python"
+                    -c "import matchmove_outsource; matchmove_outsource.show_submit_window()";
+
+        menuItem    -l "Prepare Outsource Cameratrack"
+                    -sourceType "python"
+                    -c "import matchmove_outsource; matchmove_outsource.show_prepare_cameratrack_window()";
+
+
+/*****************************************************************************/
+/* HELP */
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 71
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Help"
+        -enableBackground 0
+        -align "center"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.25
+        -image "matchmove/spacer_help.png"
+        -image1 "matchmove/spacer_help.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+    ;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Documentation"
+        -enableBackground 0
+        -align "center"
+        -label "Documentation"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 0.8 0.8 0.8
+        -overlayLabelBackColor 0 0 0 0.5
+        -image "matchmove/icon_help_documentation.png"
+        -image1 "matchmove/icon_help_documentation.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1;
+
+        popupMenu -b 1 ;
+
+        menuItem    -l "Matchmove Guidelines"
+                    -i "matchmove/dnet.png"
+                    -sourceType "python"
+                    -c "import webbrowser; webbrowser.open( 'http://dnet.dneg.com/display/3D/Matchmove+Guidelines' )";
+
+        menuItem    -l "Body Tracking Training Modules"
+                    -i "matchmove/dnet.png"
+                    -sourceType "python"
+                    -c "import webbrowser; webbrowser.open( 'http://dnet.dneg.com/display/3D/Body+Tracking+Training+Modules' )";
+
+        menuItem    -l "Camera Tracking Training Modules"
+                    -i "matchmove/dnet.png"
+                    -sourceType "python"
+                    -c "import webbrowser; webbrowser.open( 'http://dnet.dneg.com/display/3D/Camera+Tracking+Training+Modules' )";
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Ticket Creator"
+        -enableBackground 0
+        -align "center"
+        -label "Ticket Creator"
+        -labelOffset 0
+        -font "plainLabelFont"
+        -overlayLabelColor 1.0 1.0 1.0
+        -overlayLabelBackColor 0 0 0 0.0
+        -image "matchmove/icon_help_jira.png"
+        -image1 "matchmove/icon_help_jira.png"
+        -style "iconOnly"
+        -marginWidth 1
+        -marginHeight 1
+        -sourceType "python"
+        -commandRepeatable 1
+        -flat 1
+        -command "import ticket_creator; ticket_creator.show_report_dialog(labels=['matchmove'])" ;
+
+}
