@@ -1,0 +1,397 @@
+
+//Original script
+// Zoomer v0.9
+// Author: Jeremie Talbot
+// www.talbotsite.com
+// all complaints go to jeremie@talbotsite.com
+// Date: 11.9.01
+//
+// creates a handy interface to zoom the camera for tracking and other purposes
+// It uses the common horizontal and vertical film offsets in conjunction with overscan
+//
+// It is very useful for trackers to get in close without spending time typing in fields and guessing.
+// It is also useful for lighters and animators to quickly see if their imagePlane is lined up.
+
+
+//I have Modified with below Attributes in script
+// *expressions created for the pointblast script are now on a per-camera basis, so more than 1 camera can pointblast at the same time
+// *zoom detached from pointblast script to allow more control when playblasting
+// *sliders update when you change camera in the drop down menu.
+// *min and max values for the horizontal and vertical sliders are calculated from the current camera's film back, so it should always snap to edges of image plane.
+
+
+global proc zoomerate()
+{
+	
+	string $pane = `getPanel -wf`;
+	
+	string $whichCam = `modelPanel -q -camera $pane`;
+	string $whichCamShape[]= `ls -dag -shapes -ap $whichCam`;
+	
+	string $cameras[] = `ls -ca`;
+	string $diffCams[] = stringArrayRemove($whichCamShape, $cameras);
+	
+	if (`window -ex  zoomerWin2`)
+	{
+		deleteUI zoomerWin2;
+	}
+	window -in "zoomer" -resizeToFitChildren true -title "Zoomer_v1.0" zoomerWin2;
+	
+	// window_creation
+	columnLayout;
+		frameLayout -borderVisible 0 -labelVisible true -label "Pan_Zoom_Cntrls" -marginWidth 5 -marginHeight 5;
+			columnLayout;
+				optionMenuGrp -label "Camera_to_Zoom" -cc "zoomeratorUpdate" -cat 1 "left" 0 -cal 1 "left" whichCam;
+				menuItem -label $whichCamShape[0];
+				
+				int $i;
+				for ( $i = 0; $i < size($diffCams); $i++ )
+				{
+					menuItem -label $cameras[$i];
+				}
+				
+				$whichCamAttr = $whichCamShape[0] + ".horizontalPan";
+				floatSliderGrp -label "Horizontal"  -v `getAttr $whichCamAttr` -pre 6 -step 0.0001 -dc "moveIt" -cc "moveIt" -field true offX;
+				$whichCamAttr = $whichCamShape[0] + ".verticalPan";
+				floatSliderGrp -label "Vertical"  -v `getAttr $whichCamAttr`  -pre 6 -step 0.0001 -dc "moveIt" -cc "moveIt" -field true offY;
+				$whichCamAttr = $whichCamShape[0] + ".zoom";
+				floatSliderGrp -label "Depth"  -v `getAttr $whichCamAttr`  -min 0.01 -max 3 -pre 2 -step 0.00001 -dc "zoomIt" -cc "zoomIt" -field true offZ;
+				checkBox -label "PointBlast Cntrl" -v 0 -cc "pointblast" pointBlastOption;
+				checkBox -label "Stereo Cntrl" -v 0 -onc "stereoOn" stereoOption; 
+				
+				button -label "Reset" -c "resetCam" reset;
+				setParent ..; // end columnLayout
+			setParent ..; // end frameLayout
+		setParent ..; // end columnLayout
+	
+	showWindow zoomerWin2;
+	zoomeratorUpdate();
+	
+}
+
+global proc zoomeratorUpdate()
+{
+	string $cam = `optionMenuGrp -q -v whichCam`;
+	float $hMaxOffset = `getAttr ($cam + ".horizontalFilmAperture")` / 2;
+	float $vMaxOffset = `getAttr ($cam + ".verticalFilmAperture")` / 2;
+	
+	floatSliderGrp -e -v `getAttr ($cam + ".horizontalPan")` -min (-$hMaxOffset) -max $hMaxOffset offX;
+	floatSliderGrp -e -v `getAttr ($cam + ".verticalPan")` -min (-$vMaxOffset) -max $vMaxOffset offY;
+	floatSliderGrp -e -v `getAttr ($cam + ".zoom")` offZ;
+	
+	if(`objExists ($cam+"_pointblastEXP")`)
+	{
+		floatSliderGrp -e -en 0 offX;
+		floatSliderGrp -e -en 0 offY;
+		checkBox -e -v 1 pointBlastOption;
+		button -e -en 0 reset;
+	}
+	else
+	{
+		floatSliderGrp -e -en 1 offX;
+		floatSliderGrp -e -en 1 offY;
+		checkBox -e -v 0 pointBlastOption;
+		button -e -en 1 reset;
+	}
+	
+	if(`gmatch $cam "*leftShape*"` == 0  && `gmatch $cam "*LeftShape*"` == 0 && `gmatch $cam "*rightShape*"` == 0 && `gmatch $cam "*RightShape*"` == 0)
+	{
+		checkBox -e -en 0 stereoOption;
+	}
+	else
+	{
+		checkBox -e -en 1 stereoOption;
+	}
+}
+
+global proc moveIt()
+{
+	string $cam = `optionMenuGrp -q -v whichCam`;
+	setAttr ($cam + ".panZoomEnabled") 1;
+	
+	float $offsetX = `floatSliderGrp -q -v offX`;
+	float $offsetY = `floatSliderGrp -q -v offY`;
+	
+	setAttr ($cam + ".horizontalPan") $offsetX;
+	setAttr ($cam + ".verticalPan") $offsetY;
+	
+	int $stereoFlag = `checkBox -query -v stereoOption`;
+	if($stereoFlag == 1)
+	{
+		string $otherCam = getTheOtherStereoCamera($cam);
+		
+		if($otherCam != "")
+		{
+			setAttr ($otherCam + ".horizontalPan") $offsetX;
+			setAttr ($otherCam + ".verticalPan") $offsetY;
+		}
+	}
+}
+
+global proc zoomIt()
+{
+	string $cam = `optionMenuGrp -q -v whichCam`;
+	setAttr ($cam + ".panZoomEnabled") 1;
+	
+	float $offsetZ =  `floatSliderGrp -q -v offZ`;
+	
+	setAttr ($cam + ".zoom") $offsetZ;
+	int $stereoFlag = `checkBox -query -v stereoOption`;
+	
+	if($stereoFlag == 1)
+	{
+		string $otherCam = getTheOtherStereoCamera($cam);
+		int $pointBlastFlag = `checkBox -query -v pointBlastOption`;
+		
+		if($otherCam != "")
+		{
+			if($pointBlastFlag == 1)
+			{ 
+				
+			}
+			setAttr ($otherCam + ".zoom") $offsetZ;
+		}
+	}
+}
+
+global proc resetCam()
+{
+	string $resetCam = `optionMenuGrp -q -v whichCam`;
+	
+	setAttr ($resetCam + ".panZoomEnabled") 0;
+	setAttr ($resetCam + ".horizontalPan") 0;
+	setAttr ($resetCam + ".verticalPan") 0;
+	setAttr ($resetCam + ".zoom") 1;
+	int $stereoFlag = `checkBox -query -v stereoOption`;
+	if($stereoFlag == 1)
+	{
+		string $otherCam = getTheOtherStereoCamera($resetCam);
+		
+		if($otherCam != "")
+		{
+			setAttr ($otherCam + ".panZoomEnabled") 0;
+			setAttr ($otherCam + ".horizontalPan") 0;
+			setAttr ($otherCam + ".verticalPan") 0;
+			setAttr ($otherCam + ".zoom") 1;
+		}
+	}
+	floatSliderGrp -e -v 0 offX;
+	floatSliderGrp -e -v 0 offY;
+	floatSliderGrp -e -v 1 offZ;
+	
+}
+
+global proc pointblast()
+{
+	
+	string $_cam = `optionMenuGrp -q -v whichCam`;
+	global vector $camSpace;
+	global string $expr;
+	
+	int $pointBlastFlag = `checkBox -query -v pointBlastOption`;
+	
+	if($pointBlastFlag == 0){
+		if(`objExists ($_cam+"_pointblastEXP")`)
+		{
+			delete ($_cam+"_pointblastEXP");
+			
+			int $stereoFlag = `checkBox -query -v stereoOption`;
+			if($stereoFlag == 1){
+				
+				string $otherCam = getTheOtherStereoCamera($_cam);
+				
+				if($otherCam != "")
+				{
+					delete ($otherCam+"_pointblastEXP");
+				}
+			}
+			moveIt();
+			zoomIt();
+		}
+	}
+	else
+	{
+		string $sel[] = `ls -sl -fl`;
+		
+		if(!size($sel))
+		{
+			error "nothing selected";
+		}
+		else
+		{
+			if(`objExists ($_cam+"_pointblastEXP")` == 0) 
+			{
+				$expr = getExpressionForPointBlast($_cam, $camSpace, $sel);
+				expression -s $expr -o "" -ae 1 -uc all -n ($_cam+"_pointblastEXP");
+			}
+			
+			int $stereoFlag = `checkBox -query -v stereoOption`;
+			if($stereoFlag == 1){
+				
+				string $otherCam = getTheOtherStereoCamera($_cam);
+				
+				if($otherCam != "")
+				{
+					if(`objExists ($otherCam+"_pointblastEXP")` == 0)
+					{
+						$expr = getExpressionForPointBlast($otherCam, $camSpace, $sel);
+						expression -s $expr -o "" -ae 1 -uc all -n ($otherCam+"_pointblastEXP");
+					}
+					else
+					{
+						delete ($otherCam+"_pointblastEXP");
+						$expr = getExpressionForPointBlast($otherCam, $camSpace, $sel);
+						expression -s $expr -o "" -ae 1 -uc all -n ($otherCam+"_pointblastEXP");
+					}
+				}
+			}
+		}
+		
+	}
+	
+	zoomeratorUpdate();
+}
+global proc matrix getMatrix(string $attr)
+{
+	float $v[]=`getAttr $attr`;
+	
+	matrix $mat[4][4]=<< $v[ 0], $v[ 1], $v[ 2], $v[ 3];
+							$v[ 4], $v[ 5], $v[ 6], $v[ 7];
+							$v[ 8], $v[ 9], $v[10], $v[11];
+							$v[12], $v[13], $v[14], $v[15] >>;
+	return $mat;
+}
+
+global proc vector mult_vectorMatrix(vector $v, matrix $m)
+{
+	matrix $v1[1][4] = <<$v.x, $v.y, $v.z, 1>>;
+	matrix $v2[1][4] = $v1 * $m;
+	
+	return <<$v2[0][0], $v2[0][1],  $v2[0][2]>>;
+}
+
+global proc float angular2rad(float $angle)
+{
+	string $pref = `currentUnit -q -a`;
+	if("deg" == $pref)
+		$angle = $angle * 0.0174532925;
+	
+	return $angle;
+}
+
+global proc string getExpressionForPointBlast(string $_cam, vector $camSpace,string $sel[])
+{
+	string $obj = $sel[0];
+	
+	float $aspectRatio = `camera -q -ar $_cam`;
+	
+	float $hfa = `camera -q -hfa $_cam`;
+	float $vfa = `camera -q -vfa $_cam`;
+	
+	$expr = "$camSpace = world2screen(\"" + $_cam + "\", \"" + $obj + "\");\n";
+	$expr+= ($_cam + ".horizontalPan = ($camSpace.x * " + $hfa + "/2);\n");
+	$expr+= ($_cam + ".verticalPan = (($camSpace.y * " + $vfa + ") / 2);\n");
+	
+	return $expr;
+}
+
+global proc vector world2screen(string $cam, string $selection)
+{
+	
+	// get_object_position
+	float $pos[] = `xform -q -ws -t $selection`;
+	vector $posVec_ws = <<$pos[0], $pos[1], $pos[2]>>;
+	
+	// get_camera_world_inverse_matrix
+	matrix $cam_matrix[4][4] = getMatrix($cam + ".worldInverseMatrix");
+	
+	// multiply_obejct_position
+	vector $posVec_cs = mult_vectorMatrix($posVec_ws, $cam_matrix);
+	
+	// get_cam_scale
+	float $camScale = `camera -q -cs $cam`;
+	
+	// get_lens_squeeze
+	float $lensSqueezeRatio = `camera -q -lsr $cam`;
+	
+	// get_horizontal_and_vertical_film view
+	float $hfv = `camera -q -hfv $cam`;
+	float $vfv = `camera -q -vfv $cam`;
+	
+	// convert_to_radians
+	$hfv = angular2rad($hfv);
+	$vfv = angular2rad($vfv);
+	
+	// Set x and y, don't divide by 0.
+	float $pntX;
+	float $pntY;
+	if ($posVec_cs != 0 && tan($hfv) != 0 && $camScale != 0)
+	{
+		if ($lensSqueezeRatio != 0){
+			$pntX = (($posVec_cs.x / (-$posVec_cs.z)) / tan($hfv/2)) / $camScale / $lensSqueezeRatio;
+		}else{
+			$pntX = $posVec_cs;
+		}
+		
+		$pntY = (($posVec_cs.y / (-$posVec_cs.z)) / tan($vfv/2)) / $camScale;
+	}
+	else
+	{
+		$pntX = $posVec_cs.x;
+		$pntY = $posVec_cs.y;
+	}
+	
+	return <<$pntX, $pntY, 1.0>>;
+}
+
+global proc string getTheOtherStereoCamera(string $camera)
+{
+	// which_stereo_camera
+	string $side = "";
+	if(`gmatch $camera "*leftShape*"` || `gmatch $camera "*LeftShape*"`)
+	{
+		$side = "left";
+	}
+	else if(`gmatch $camera "*rightShape*"` || `gmatch $camera "*RightShape*"`)
+	{
+		$side = "right";
+	}
+	
+	// If_it_is_not_stereo
+	if($side == "")
+	{
+		return "";
+	}
+	
+	// If_a_stereo_camera_find_secondary_camera
+	string $allCamerasInScene[] = `ls -ca`;
+	if($side == "left")
+	{
+		for($whichCamera in $allCamerasInScene)
+		{
+			if(`gmatch $whichCamera "*rightShape*"` || `gmatch $whichCamera "*RightShape*"`)
+			{
+				return $whichCamera;
+			}
+		}
+	}
+	else if($side == "right")
+	{
+		for($whichCamera in $allCamerasInScene)
+		{
+			if(`gmatch $whichCamera "*leftShape*"` || `gmatch $whichCamera "*LeftShape*"`)
+			{
+				return $whichCamera;
+			}
+		}
+	}
+	
+	return "";
+}
+
+global proc stereoOn()
+{
+	moveIt();
+	zoomIt();
+	pointblast();
+}
