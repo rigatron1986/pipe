@@ -1,0 +1,29 @@
+from PyQt4 import QtGui
+import sys
+
+imagePathA = "/user_data/papa/scripts/apps-maya-dnphotofit/icon/dnPhotoFit.jpg"
+imagePath = "/user_data/papa/scripts/apps-maya-dnphotofit/icon/dnPhotoFitBake.jpg"
+
+
+class ImgWidget1(QtGui.QLabel):
+
+    def __init__(self, image, parent=None):
+        super(ImgWidget1, self).__init__(parent)
+        pic = QtGui.QPixmap(image)
+        self.setPixmap(pic)
+
+
+class Widget(QtGui.QWidget):
+
+    def __init__(self):
+        super(Widget, self).__init__()
+        tableWidget = QtGui.QTableWidget(10, 2, self)
+        tableWidget.setCellWidget(0, 1, ImgWidget1(imagePathA, self))
+        tableWidget.setCellWidget(1, 1, ImgWidget1(imagePath, self))
+
+
+if __name__ == "__main__":
+    app = QtGui.QApplication([])
+    wnd = Widget()
+    wnd.show()
+    sys.exit(app.exec_())
